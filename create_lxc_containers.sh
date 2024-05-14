@@ -29,14 +29,14 @@ create_lxc() {
 
   # Retrieve the IP address
   sleep 5  # Wait for the container to fully start
-  IP_ADDRESS=$(pct exec $CTID -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}.\d+')
+  IP_ADDRESS=$(pct exec $CTID -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
   echo "$HOSTNAME is accessible at http://$IP_ADDRESS:$PORT"
   return 0
 }
 
 # Get available storage options
-storage_options=$(pvesm status -storage | awk '{if(NR>1) print $1}')
+storage_options=$(pvesm status | awk '{if(NR>1) print $1}')
 storage_list=($storage_options)
 
 if [ ${#storage_list[@]} -eq 0 ]; then
@@ -55,7 +55,7 @@ select storage in "${storage_list[@]}"; do
 done
 
 # Template and bridge details
-TEMPLATE="$storage:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
+TEMPLATE="${storage}:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
 BRIDGE="vmbr0"
 
 # Recommended resources
