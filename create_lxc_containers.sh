@@ -90,7 +90,7 @@ for res in "${resources[@]}"; do
   HOSTNAME=${params[2]}
   CPUS=${params[3]}
   RAM=${params[4]}
-  STORAGE="local:${params[5]}"
+  STORAGE="local-lvm:${params[5]}"  # Change this line to use the correct storage backend
   PORT=${params[6]}
 
   # Skip the non-selected media server and request manager
