@@ -54,8 +54,9 @@ select storage in "${storage_list[@]}"; do
   fi
 done
 
-# Template and bridge details
-TEMPLATE="${storage}:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
+# Template storage
+TEMPLATE_STORAGE="local"
+TEMPLATE="${TEMPLATE_STORAGE}:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
 BRIDGE="vmbr0"
 
 # Recommended resources
