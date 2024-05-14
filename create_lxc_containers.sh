@@ -36,7 +36,7 @@ create_lxc() {
 }
 
 # Get available storage options
-storage_options=$(pvesm status | awk '{if(NR>1) print $1}')
+storage_options=$(pvesm status | awk 'NR>1 {print $1}')
 storage_list=($storage_options)
 
 if [ ${#storage_list[@]} -eq 0 ]; then
