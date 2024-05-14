@@ -35,8 +35,27 @@ create_lxc() {
   return 0
 }
 
+# Get available storage options
+storage_options=$(pvesm status -storage | awk '{if(NR>1) print $1}')
+storage_list=($storage_options)
+
+if [ ${#storage_list[@]} -eq 0 ]; then
+  echo "No storage options available."
+  exit 1
+fi
+
+echo "Available storage options:"
+select storage in "${storage_list[@]}"; do
+  if [[ -n "$storage" ]]; then
+    echo "You selected $storage"
+    break
+  else
+    echo "Invalid selection"
+  fi
+done
+
 # Template and bridge details
-TEMPLATE="local:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
+TEMPLATE="$storage:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
 BRIDGE="vmbr0"
 
 # Recommended resources
@@ -90,7 +109,7 @@ for res in "${resources[@]}"; do
   HOSTNAME=${params[2]}
   CPUS=${params[3]}
   RAM=${params[4]}
-  STORAGE="local-lvm:${params[5]}"  # Change this line to use the correct storage backend
+  STORAGE="${storage}:${params[5]}"
   PORT=${params[6]}
 
   # Skip the non-selected media server and request manager
