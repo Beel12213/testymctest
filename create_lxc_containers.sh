@@ -9,6 +9,7 @@ create_lxc() {
   local STORAGE=$5
   local TEMPLATE=$6
   local BRIDGE=$7
+  local PORT=$8
 
   # Create the container
   pct create $CTID $TEMPLATE -hostname $HOSTNAME -cores $CPUS -memory $RAM -rootfs ${STORAGE} -net0 name=eth0,bridge=$BRIDGE,ip=dhcp -password $PVE_PASS -features nesting=1
@@ -27,7 +28,8 @@ create_lxc() {
   fi
 
   # Retrieve the IP address
-  IP_ADDRESS=$(pct exec $CTID -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+  sleep 5  # Wait for the container to fully start
+  IP_ADDRESS=$(pct exec $CTID -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}.\d+')
 
   echo "$HOSTNAME is accessible at http://$IP_ADDRESS:$PORT"
   return 0
@@ -102,7 +104,7 @@ for res in "${resources[@]}"; do
     continue
   fi
 
-  create_lxc $CTID $HOSTNAME $CPUS $RAM $STORAGE $TEMPLATE $BRIDGE
+  create_lxc $CTID $HOSTNAME $CPUS $RAM $STORAGE $TEMPLATE $BRIDGE $PORT
 done
 
 echo "All selected LXC containers have been created and started."
