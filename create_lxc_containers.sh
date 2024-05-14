@@ -10,8 +10,27 @@ create_lxc() {
   local TEMPLATE=$6
   local BRIDGE=$7
 
-  pct create $CTID $TEMPLATE -hostname $HOSTNAME -cores $CPUS -memory $RAM -rootfs $STORAGE -net0 name=eth0,bridge=$BRIDGE,ip=dhcp -password $PVE_PASS -features nesting=1
+  # Create the container
+  pct create $CTID $TEMPLATE -hostname $HOSTNAME -cores $CPUS -memory $RAM -rootfs ${STORAGE} -net0 name=eth0,bridge=$BRIDGE,ip=dhcp -password $PVE_PASS -features nesting=1
+
+  if [ $? -ne 0 ]; then
+    echo "Failed to create container $CTID ($HOSTNAME)"
+    return 1
+  fi
+
+  # Start the container
   pct start $CTID
+
+  if [ $? -ne 0 ]; then
+    echo "Failed to start container $CTID ($HOSTNAME)"
+    return 1
+  fi
+
+  # Retrieve the IP address
+  IP_ADDRESS=$(pct exec $CTID -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+
+  echo "$HOSTNAME is accessible at http://$IP_ADDRESS:$PORT"
+  return 0
 }
 
 # Template and bridge details
@@ -51,6 +70,17 @@ else
   request_manager="Jellyseerr"
 fi
 
+# Prompt for password
+read -s -p "Enter new password: " PVE_PASS
+echo
+read -s -p "Retype new password: " PVE_PASS_CONFIRM
+echo
+
+if [[ $PVE_PASS != $PVE_PASS_CONFIRM ]]; then
+  echo "Passwords do not match."
+  exit 1
+fi
+
 # Create containers
 for res in "${resources[@]}"; do
   IFS='|' read -r -a params <<< "$res"
@@ -58,7 +88,7 @@ for res in "${resources[@]}"; do
   HOSTNAME=${params[2]}
   CPUS=${params[3]}
   RAM=${params[4]}
-  STORAGE=${params[5]}
+  STORAGE="local:${params[5]}"
   PORT=${params[6]}
 
   # Skip the non-selected media server and request manager
@@ -73,9 +103,6 @@ for res in "${resources[@]}"; do
   fi
 
   create_lxc $CTID $HOSTNAME $CPUS $RAM $STORAGE $TEMPLATE $BRIDGE
-  IP_ADDRESS=$(pct exec $CTID ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
-
-  echo "$HOSTNAME is accessible at http://$IP_ADDRESS:$PORT"
 done
 
 echo "All selected LXC containers have been created and started."
