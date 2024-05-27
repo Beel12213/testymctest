@@ -57,14 +57,22 @@ function default_settings() {
 function install_gnupg {
   msg_info "Installing gnupg"
   apt-get update
-  apt-get install -y gnupg
-  msg_ok "Installed gnupg"
+  if apt-get install -y gnupg; then
+    msg_ok "Installed gnupg"
+  else
+    msg_error "Failed to install gnupg"
+    exit 1
+  fi
 }
 
 function install_notifiarr {
   msg_info "Installing Notifiarr"
-  curl -s https://golift.io/repo.sh | sudo bash -s - notifiarr
-  msg_ok "Installed Notifiarr"
+  if curl -s https://golift.io/repo.sh | bash -s - notifiarr; then
+    msg_ok "Installed Notifiarr"
+  else
+    msg_error "Failed to install Notifiarr"
+    exit 1
+  fi
 }
 
 function configure_notifiarr {
